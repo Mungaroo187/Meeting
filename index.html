@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Site Meeting Minutes</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+  :root {
+    --bg:#0f1117; --surface:#181c27; --surface2:#1e2335; --border:#2a3050;
+    --accent:#f5a623; --accent2:#e8f542; --text:#e8eaf0; --text-dim:#6b7394;
+    --text-mid:#a0a8c0; --green:#42f587; --red:#f54242;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;min-height:100vh;padding:24px 16px 60px}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:40px 40px;opacity:.2;pointer-events:none;z-index:0}
+  .container{max-width:780px;margin:0 auto;position:relative;z-index:1}
+  header{border-bottom:1px solid var(--border);padding-bottom:20px;margin-bottom:28px}
+  .header-tag{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+  h1{font-size:26px;font-weight:600;letter-spacing:-.5px} h1 span{color:var(--accent)}
+  .subtitle{font-size:13px;color:var(--text-dim);margin-top:6px;font-weight:300}
+  .keys-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+  .key-block{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+  .key-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .key-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase}
+  .key-badge{font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 7px;border-radius:3px}
+  .key-badge.set{background:rgba(66,245,135,.1);color:var(--green);border:1px solid rgba(66,245,135,.3)}
+  .key-badge.unset{background:rgba(245,166,35,.1);color:var(--accent);border:1px solid rgba(245,166,35,.3)}
+  .key-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:7px 10px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;outline:none;transition:border-color .2s}
+  .key-input:focus{border-color:var(--accent)} .key-input::placeholder{color:var(--text-dim)}
+  .key-hint{font-size:11px;color:var(--text-dim);margin-top:6px} .key-hint a{color:var(--accent);text-decoration:none} .key-hint a:hover{text-decoration:underline}
+  .meta-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+  .field-group{display:flex;flex-direction:column;gap:6px}
+  .field-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase}
+  .field-input{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:9px 12px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;outline:none;transition:border-color .2s}
+  .field-input:focus{border-color:var(--accent)} .field-input::placeholder{color:var(--text-dim)}
+  .attendees-section{margin-bottom:20px}
+  .attendees-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;display:block}
+  .attendees-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:9px 12px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;outline:none;transition:border-color .2s}
+  .attendees-input:focus{border-color:var(--accent)} .attendees-input::placeholder{color:var(--text-dim)}
+  .upload-zone{border:2px dashed var(--border);border-radius:8px;padding:36px 24px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface);margin-bottom:16px;position:relative}
+  .upload-zone:hover,.upload-zone.dragover{border-color:var(--accent);background:rgba(245,166,35,.04)}
+  .upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+  .upload-icon{font-size:30px;margin-bottom:10px;display:block}
+  .upload-title{font-size:14px;font-weight:500;margin-bottom:5px}
+  .upload-sub{font-size:12px;color:var(--text-dim)} .upload-sub span{font-family:'IBM Plex Mono',monospace;color:var(--accent)}
+  .file-selected{display:none;align-items:center;gap:10px;background:rgba(66,245,135,.06);border:1px solid rgba(66,245,135,.2);border-radius:6px;padding:10px 14px;margin-bottom:16px}
+  .file-name{font-size:13px;font-weight:500;color:var(--green)} .file-size{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim);margin-top:2px} .file-info{flex:1}
+  .file-clear{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:16px;padding:4px;transition:color .2s} .file-clear:hover{color:var(--red)}
+  .alt-toggle{text-align:center;margin-bottom:14px}
+  .alt-toggle button{background:none;border:1px solid var(--border);color:var(--text-dim);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1px;padding:6px 14px;border-radius:4px;cursor:pointer;transition:all .2s}
+  .alt-toggle button:hover{border-color:var(--accent);color:var(--accent)}
+  .transcript-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:16px;display:none}
+  .transcript-box.visible{display:block}
+  .box-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px}
+  .transcript-box textarea{width:100%;min-height:120px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;padding:10px 12px;outline:none;resize:vertical;line-height:1.6}
+  .transcript-box textarea:focus{border-color:var(--accent)}
+  .process-btn{width:100%;padding:14px;background:var(--accent);color:#0f1117;border:none;border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;margin-bottom:24px}
+  .process-btn:hover:not(:disabled){background:#ffb83d;transform:translateY(-1px)} .process-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+  .progress-section{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:24px;display:none}
+  .progress-section.visible{display:block}
+  .progress-steps{display:flex;flex-direction:column;gap:14px}
+  .step{display:flex;align-items:flex-start;gap:12px}
+  .step-indicator{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim);flex-shrink:0;transition:all .3s;margin-top:1px}
+  .step.active .step-indicator{border-color:var(--accent);color:var(--accent);animation:pulse 1.5s infinite}
+  .step.done .step-indicator{border-color:var(--green);background:rgba(66,245,135,.1);color:var(--green)}
+  .step.error .step-indicator{border-color:var(--red);color:var(--red)}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(245,166,35,.4)}50%{box-shadow:0 0 0 6px rgba(245,166,35,0)}}
+  .step-info{flex:1} .step-text{font-size:13px;color:var(--text-mid);line-height:1.5}
+  .step.active .step-text{color:var(--text)} .step.done .step-text{color:var(--green)} .step.error .step-text{color:var(--red)}
+  .step-sub{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);margin-top:3px}
+  .error-box{background:rgba(245,66,66,.06);border:1px solid rgba(245,66,66,.3);border-radius:6px;padding:14px 16px;font-size:13px;color:var(--red);margin-bottom:16px;display:none;line-height:1.5}
+  .error-box.visible{display:block}
+  .results-section{display:none} .results-section.visible{display:block}
+  .results-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .results-title{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent);letter-spacing:2px;text-transform:uppercase}
+  .results-actions{display:flex;gap:8px}
+  .action-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text-mid);font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:6px 12px;border-radius:4px;cursor:pointer;transition:all .2s}
+  .action-btn:hover{border-color:var(--accent);color:var(--accent)}
+  .output-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:14px;overflow:hidden}
+  .card-header{padding:11px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--surface2)}
+  .card-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0}
+  .card-title{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-mid);letter-spacing:1.5px;text-transform:uppercase}
+  .card-body{padding:16px;font-size:13px;line-height:1.7;color:var(--text);white-space:pre-wrap}
+  .action-table{width:100%;border-collapse:collapse}
+  .action-table th{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;text-align:left;padding:8px 12px;border-bottom:1px solid var(--border)}
+  .action-table td{font-size:13px;padding:10px 12px;border-bottom:1px solid rgba(42,48,80,.5);vertical-align:top;line-height:1.5}
+  .action-table tr:last-child td{border-bottom:none}
+  .action-table td:nth-child(2){color:var(--accent);font-weight:500}
+  .action-table td:last-child{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim)}
+  .transcript-viewer{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;overflow:hidden}
+  .transcript-toggle{width:100%;background:var(--surface2);border:none;border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;transition:color .2s}
+  .transcript-toggle:hover{color:var(--text)}
+  .transcript-content{padding:16px;font-size:12px;line-height:1.8;color:var(--text-dim);white-space:pre-wrap;font-family:'IBM Plex Mono',monospace;max-height:200px;overflow-y:auto;display:none}
+  .transcript-content.visible{display:block}
+  ::-webkit-scrollbar{width:4px} ::-webkit-scrollbar-track{background:var(--bg)} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+  @media(max-width:500px){.meta-row,.keys-grid{grid-template-columns:1fr} h1{font-size:20px}}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="header-tag">⬡ Gamuda Engineering</div>
+    <h1>Site Meeting <span>Minutes</span></h1>
+    <p class="subtitle">Record on phone → drop file → get minutes + action items</p>
+  </header>
+
+  <div class="keys-grid">
+    <div class="key-block">
+      <div class="key-header">
+        <span class="key-label">AssemblyAI Key</span>
+        <span class="key-badge unset" id="aaiStatus">NOT SET</span>
+      </div>
+      <input type="password" class="key-input" id="aaiKey" placeholder="Your AssemblyAI API key" oninput="updateStatus('aaiKey','aaiStatus','')" />
+      <div class="key-hint">Free account at <a href="https://www.assemblyai.com" target="_blank">assemblyai.com</a> — ~$0.15/hr audio</div>
+    </div>
+    <div class="key-block">
+      <div class="key-header">
+        <span class="key-label">Anthropic Key</span>
+        <span class="key-badge unset" id="anthStatus">NOT SET</span>
+      </div>
+      <input type="password" class="key-input" id="anthKey" placeholder="sk-ant-..." oninput="updateStatus('anthKey','anthStatus','sk-ant-')" />
+      <div class="key-hint">Your existing Claude API key</div>
+    </div>
+  </div>
+
+  <div class="meta-row">
+    <div class="field-group">
+      <label class="field-label">Project / Package</label>
+      <input type="text" class="field-input" id="project" placeholder="e.g. UGT01 — Western Tunnelling" />
+    </div>
+    <div class="field-group">
+      <label class="field-label">Meeting Date</label>
+      <input type="date" class="field-input" id="meetingDate" />
+    </div>
+  </div>
+
+  <div class="meta-row">
+    <div class="field-group">
+      <label class="field-label">Meeting Type</label>
+      <select class="field-input" id="meetingType">
+        <option>Site Coordination Meeting</option>
+        <option>Toolbox Talk</option>
+        <option>Design Review</option>
+        <option>Subcontractor Meeting</option>
+        <option>Safety Meeting</option>
+        <option>Progress Meeting</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Location</label>
+      <input type="text" class="field-input" id="location" placeholder="e.g. Site Office, Portal B" />
+    </div>
+  </div>
+
+  <div class="attendees-section">
+    <span class="attendees-label">Attendees (optional — helps assign action items)</span>
+    <input type="text" class="attendees-input" id="attendees" placeholder="e.g. Bud Diab, Tom Olorenshaw, Danny Yeung" />
+  </div>
+
+  <div class="upload-zone" id="uploadZone">
+    <input type="file" id="audioFile" accept="audio/*,video/*,.m4a,.mp3,.wav,.ogg,.webm,.mp4,.aac" onchange="handleFileSelect(event)" />
+    <span class="upload-icon">🎙️</span>
+    <div class="upload-title">Drop audio file here or tap to browse</div>
+    <div class="upload-sub">Supports <span>M4A · MP3 · WAV · MP4 · AAC</span></div>
+  </div>
+
+  <div class="file-selected" id="fileSelected">
+    <span style="font-size:18px">🎧</span>
+    <div class="file-info">
+      <div class="file-name" id="fileName"></div>
+      <div class="file-size" id="fileSize"></div>
+    </div>
+    <button class="file-clear" onclick="clearFile()">✕</button>
+  </div>
+
+  <div class="alt-toggle">
+    <button onclick="toggleTranscript()" id="altBtn">OR PASTE TRANSCRIPT MANUALLY</button>
+  </div>
+
+  <div class="transcript-box" id="transcriptBox">
+    <div class="box-label">Paste existing transcript here (skips AssemblyAI step)</div>
+    <textarea id="manualTranscript" placeholder="Paste transcript text here..."></textarea>
+  </div>
+
+  <button class="process-btn" id="processBtn" onclick="run()">⬡ GENERATE MINUTES</button>
+
+  <div class="error-box" id="errorBox"></div>
+
+  <div class="progress-section" id="progressSection">
+    <div class="progress-steps">
+      <div class="step" id="step1">
+        <div class="step-indicator">1</div>
+        <div class="step-info">
+          <div class="step-text">Uploading audio to AssemblyAI...</div>
+          <div class="step-sub" id="step1sub"></div>
+        </div>
+      </div>
+      <div class="step" id="step2">
+        <div class="step-indicator">2</div>
+        <div class="step-info">
+          <div class="step-text">Transcribing audio...</div>
+          <div class="step-sub" id="step2sub">Universal model — noise tolerant</div>
+        </div>
+      </div>
+      <div class="step" id="step3">
+        <div class="step-indicator">3</div>
+        <div class="step-info">
+          <div class="step-text">Generating minutes with Claude...</div>
+          <div class="step-sub" id="step3sub"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="results-section" id="resultsSection">
+    <div class="results-header">
+      <span class="results-title">⬡ Output</span>
+      <div class="results-actions">
+        <button class="action-btn" id="copyBtn" onclick="copyAll()">Copy All</button>
+        <button class="action-btn" onclick="resetApp()">New Meeting</button>
+      </div>
+    </div>
+
+    <div class="output-card">
+      <div class="card-header"><div class="card-dot"></div><span class="card-title">Meeting Details</span></div>
+      <div class="card-body" id="meetingHeader"></div>
+    </div>
+    <div class="output-card">
+      <div class="card-header"><div class="card-dot"></div><span class="card-title">Summary</span></div>
+      <div class="card-body" id="summaryOutput"></div>
+    </div>
+    <div class="output-card">
+      <div class="card-header"><div class="card-dot"></div><span class="card-title">Key Decisions & Outcomes</span></div>
+      <div class="card-body" id="decisionsOutput"></div>
+    </div>
+    <div class="output-card">
+      <div class="card-header"><div class="card-dot" style="background:var(--red)"></div><span class="card-title">Issues & Risks Raised</span></div>
+      <div class="card-body" id="issuesOutput"></div>
+    </div>
+    <div class="output-card">
+      <div class="card-header"><div class="card-dot" style="background:var(--accent2)"></div><span class="card-title">Action Items</span></div>
+      <div class="card-body" style="padding:0">
+        <table class="action-table">
+          <thead><tr><th>Action</th><th>Owner</th><th>Due</th></tr></thead>
+          <tbody id="actionTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="transcript-viewer">
+      <button class="transcript-toggle" onclick="toggleTranscriptView()">
+        <span>RAW TRANSCRIPT</span>
+        <span id="transcriptArrow">▼ SHOW</span>
+      </button>
+      <div class="transcript-content" id="transcriptView"></div>
+    </div>
+  </div>
+
+</div>
+<script>
+  let selectedFile = null, transcriptShown = false, transcriptViewShown = false;
+  document.getElementById('meetingDate').valueAsDate = new Date();
+
+  function updateStatus(inputId, statusId, prefix) {
+    const val = document.getElementById(inputId).value.trim();
+    const el = document.getElementById(statusId);
+    const ok = prefix ? (val.startsWith(prefix) && val.length > 20) : val.length > 10;
+    el.textContent = ok ? 'SET' : 'NOT SET';
+    el.className = 'key-badge ' + (ok ? 'set' : 'unset');
+  }
+
+  function handleFileSelect(e) {
+    const f = e.target.files[0]; if (!f) return;
+    selectedFile = f;
+    document.getElementById('fileName').textContent = f.name;
+    document.getElementById('fileSize').textContent = fmtBytes(f.size);
+    document.getElementById('fileSelected').style.display = 'flex';
+    document.getElementById('uploadZone').style.display = 'none';
+  }
+
+  function clearFile() {
+    selectedFile = null;
+    document.getElementById('audioFile').value = '';
+    document.getElementById('fileSelected').style.display = 'none';
+    document.getElementById('uploadZone').style.display = 'block';
+  }
+
+  function toggleTranscript() {
+    transcriptShown = !transcriptShown;
+    document.getElementById('transcriptBox').classList.toggle('visible', transcriptShown);
+    document.getElementById('altBtn').textContent = transcriptShown ? 'HIDE MANUAL INPUT' : 'OR PASTE TRANSCRIPT MANUALLY';
+  }
+
+  function toggleTranscriptView() {
+    transcriptViewShown = !transcriptViewShown;
+    document.getElementById('transcriptView').classList.toggle('visible', transcriptViewShown);
+    document.getElementById('transcriptArrow').textContent = transcriptViewShown ? '▲ HIDE' : '▼ SHOW';
+  }
+
+  function fmtBytes(b) { return b < 1048576 ? (b/1024).toFixed(1)+' KB' : (b/1048576).toFixed(1)+' MB'; }
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  function setStep(n, state, text, sub) {
+    const el = document.getElementById('step'+n);
+    el.className = 'step ' + (state||'');
+    if (text) el.querySelector('.step-text').textContent = text;
+    if (sub !== undefined) document.getElementById('step'+n+'sub').textContent = sub;
+    const ind = el.querySelector('.step-indicator');
+    ind.textContent = state==='done' ? '✓' : state==='error' ? '✕' : n;
+  }
+
+  function showErr(msg) { const b=document.getElementById('errorBox'); b.innerHTML='⚠ '+msg; b.classList.add('visible'); }
+  function hideErr() { document.getElementById('errorBox').classList.remove('visible'); }
+
+  async function transcribeAAI(file, key) {
+    setStep(1,'active','Uploading audio to AssemblyAI...',fmtBytes(file.size));
+    const up = await fetch('https://api.assemblyai.com/v2/upload',{method:'POST',headers:{authorization:key},body:file});
+    if (!up.ok) { const e=await up.json().catch(()=>({})); throw new Error('Upload failed: '+(e.error||up.status)); }
+    const {upload_url} = await up.json();
+    setStep(1,'done','Audio uploaded','');
+
+    setStep(2,'active','Transcribing audio...','Universal model — handles noisy sites');
+    const sub = await fetch('https://api.assemblyai.com/v2/transcript',{
+      method:'POST',
+      headers:{authorization:key,'content-type':'application/json'},
+      body:JSON.stringify({audio_url:upload_url,speech_models:['universal-3-pro','universal-2'],language_detection:true})
+    });
+    if (!sub.ok) { const e=await sub.json().catch(()=>({})); throw new Error('Transcription submit failed: '+(e.error||sub.status)); }
+    const {id} = await sub.json();
+
+    for (let i=0; i<120; i++) {
+      await sleep(3000);
+      const poll = await fetch('https://api.assemblyai.com/v2/transcript/'+id,{headers:{authorization:key}});
+      const p = await poll.json();
+      if (p.status==='completed') {
+        setStep(2,'done','Transcription complete', (p.words?.length||0)+' words');
+        return p.text;
+      }
+      if (p.status==='error') throw new Error('Transcription error: '+(p.error||'unknown'));
+      document.getElementById('step2sub').textContent = 'Processing... '+((i+1)*3)+'s elapsed';
+    }
+    throw new Error('Transcription timed out after 6 minutes.');
+  }
+
+  async function getMinutes(transcript, meta, key) {
+    setStep(3,'active','Generating minutes with Claude...','');
+    const prompt = `You are processing a raw transcript from a construction site meeting.
+
+MEETING DETAILS:
+Project: ${meta.project}
+Type: ${meta.meetingType}
+Date: ${meta.meetingDate}
+Location: ${meta.location}
+Attendees: ${meta.attendees}
+
+RAW TRANSCRIPT:
+${transcript}
+
+Extract only construction-relevant content. Ignore all small talk, pleasantries, and filler.
+
+Respond ONLY with a valid JSON object, no preamble, no markdown fences:
+
+{"summary":"2-4 sentence summary","decisions":["decision 1"],"issues":["issue 1"],"actions":[{"action":"what to do","owner":"who or TBC","due":"when or TBC"}]}`;
+
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-calls':'true','Access-Control-Allow-Origin':'*'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,messages:[{role:'user',content:prompt}]})
+    });
+    if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error('Claude error: '+(e.error?.message||res.status)); }
+    const data = await res.json();
+    setStep(3,'done','Minutes generated','');
+    return data.content.map(b=>b.text||'').join('');
+  }
+
+  async function run() {
+    hideErr();
+    const aaiKey = document.getElementById('aaiKey').value.trim();
+    const anthKey = document.getElementById('anthKey').value.trim();
+    const manual = document.getElementById('manualTranscript').value.trim();
+
+    if (!anthKey) { showErr('Please enter your Anthropic API key.'); return; }
+    if (!selectedFile && !manual) { showErr('Please upload an audio file or paste a transcript.'); return; }
+    if (selectedFile && !manual && !aaiKey) { showErr('Please enter your AssemblyAI API key to transcribe audio — or use the manual transcript option instead.'); return; }
+
+    const meta = {
+      project: document.getElementById('project').value.trim() || 'Not specified',
+      meetingDate: document.getElementById('meetingDate').value || new Date().toISOString().split('T')[0],
+      meetingType: document.getElementById('meetingType').value,
+      location: document.getElementById('location').value.trim() || 'Not specified',
+      attendees: document.getElementById('attendees').value.trim() || 'Not specified'
+    };
+
+    document.getElementById('processBtn').disabled = true;
+    document.getElementById('progressSection').classList.add('visible');
+    document.getElementById('resultsSection').classList.remove('visible');
+    setStep(1,'','Uploading audio to AssemblyAI...','');
+    setStep(2,'','Transcribing audio...','Universal model — handles noisy sites');
+    setStep(3,'','Generating minutes with Claude...','');
+
+    try {
+      let transcript = manual;
+      if (!transcript) {
+        transcript = await transcribeAAI(selectedFile, aaiKey);
+      } else {
+        setStep(1,'done','Using manual transcript','');
+        setStep(2,'done','Transcript ready','');
+      }
+
+      const raw = await getMinutes(transcript, meta, anthKey);
+
+      let parsed;
+      try { parsed = JSON.parse(raw.replace(/```json|```/g,'').trim()); }
+      catch { parsed = {summary:raw,decisions:[],issues:[],actions:[]}; }
+
+      showResults(parsed, transcript, meta);
+    } catch(err) {
+      showErr(err.message);
+      ['step1','step2','step3'].forEach(id => {
+        if (document.getElementById(id).classList.contains('active')) {
+          document.getElementById(id).className = 'step error';
+          document.getElementById(id).querySelector('.step-indicator').textContent = '✕';
+        }
+      });
+    } finally {
+      document.getElementById('processBtn').disabled = false;
+    }
+  }
+
+  function showResults(p, transcript, meta) {
+    document.getElementById('meetingHeader').textContent =
+      `${meta.meetingType}\n${meta.project}\n${meta.meetingDate}  ·  ${meta.location}\nAttendees: ${meta.attendees}`;
+    document.getElementById('summaryOutput').textContent = p.summary || 'No summary generated.';
+    document.getElementById('decisionsOutput').textContent =
+      (p.decisions||[]).length ? p.decisions.map((d,i)=>`${i+1}. ${d}`).join('\n') : 'No key decisions recorded.';
+    document.getElementById('issuesOutput').textContent =
+      (p.issues||[]).length ? p.issues.map((d,i)=>`${i+1}. ${d}`).join('\n') : 'No issues raised.';
+
+    const tbody = document.getElementById('actionTable');
+    tbody.innerHTML = '';
+    const actions = p.actions||[];
+    if (!actions.length) {
+      tbody.innerHTML = '<tr><td colspan="3" style="color:var(--text-dim);padding:16px;text-align:center">No action items recorded.</td></tr>';
+    } else {
+      actions.forEach(a => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${a.action}</td><td>${a.owner}</td><td>${a.due}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById('transcriptView').textContent = transcript;
+    document.getElementById('resultsSection').classList.add('visible');
+    document.getElementById('resultsSection').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+
+  function copyAll() {
+    const h = document.getElementById('meetingHeader').textContent;
+    const s = document.getElementById('summaryOutput').textContent;
+    const d = document.getElementById('decisionsOutput').textContent;
+    const i = document.getElementById('issuesOutput').textContent;
+    let a = '';
+    document.querySelectorAll('#actionTable tr').forEach(r => {
+      const c = r.querySelectorAll('td');
+      if (c.length===3) a += `• ${c[0].textContent} — ${c[1].textContent} — ${c[2].textContent}\n`;
+    });
+    navigator.clipboard.writeText(`${h}\n\nSUMMARY\n${s}\n\nKEY DECISIONS\n${d}\n\nISSUES & RISKS\n${i}\n\nACTION ITEMS\n${a}`).then(()=>{
+      const btn=document.getElementById('copyBtn'); btn.textContent='Copied ✓';
+      setTimeout(()=>btn.textContent='Copy All',2000);
+    });
+  }
+
+  function resetApp() {
+    document.getElementById('resultsSection').classList.remove('visible');
+    document.getElementById('progressSection').classList.remove('visible');
+    hideErr(); clearFile();
+    document.getElementById('manualTranscript').value = '';
+    document.getElementById('meetingDate').valueAsDate = new Date();
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  const zone = document.getElementById('uploadZone');
+  zone.addEventListener('dragover', e=>{e.preventDefault();zone.classList.add('dragover')});
+  zone.addEventListener('dragleave', ()=>zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e=>{
+    e.preventDefault(); zone.classList.remove('dragover');
+    const f=e.dataTransfer.files[0]; if(!f) return;
+    selectedFile=f;
+    document.getElementById('fileName').textContent=f.name;
+    document.getElementById('fileSize').textContent=fmtBytes(f.size);
+    document.getElementById('fileSelected').style.display='flex';
+    document.getElementById('uploadZone').style.display='none';
+  });
+</script>
+</body>
+</html>
